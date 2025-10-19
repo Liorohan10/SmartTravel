@@ -21,19 +21,36 @@ export default function HotelList() {
       setLoading(true); setError('')
       try {
         const params = Object.fromEntries(q.entries())
-        const { data } = await api.get('/liteapi/search', { params })
+        
+        // Choose appropriate endpoint based on search type
+        let endpoint = '/liteapi/hotels/search'
+        if (params.aiSearch) {
+          // Use AI-powered search
+          endpoint = '/liteapi/hotels/search'
+        } else if (params.query && !params.destination) {
+          // Use semantic hotel search for hotel name queries
+          endpoint = '/liteapi/hotels/semantic-search'
+        }
+        
+        const { data } = await api.get(endpoint, { params })
         const items = Array.isArray(data?.hotels) ? data.hotels : (Array.isArray(data) ? data : [])
-        setHotels(items.map((h,i)=>({
+        
+        setHotels(items.map((h, i) => ({
           id: h.id || h.hotelId || String(i),
           name: h.name || h.title || 'Hotel',
-          location: h.location || h.address?.city || '',
+          location: h.location || h.address?.full || h.address?.city || h.city || '',
           rating: h.rating || h.stars || h.score,
           price: h.price?.amount || h.price || h.rate,
-          image: h.image || h.images?.[0] || undefined,
+          image: h.image || h.main_photo || h.images?.[0] || undefined,
+          stars: h.stars,
+          facilities: h.facilities || [],
+          currency: h.currency || 'INR',
+          description: h.description,
           raw: h,
         })))
       } catch (e) {
-        setError('Failed to load hotels.');
+        console.error('Hotel search failed:', e)
+        setError(`Failed to load hotels: ${e.response?.data?.error || e.message}`)
       } finally { setLoading(false) }
     }
     fetchHotels()
@@ -57,23 +74,38 @@ export default function HotelList() {
     }
   }
 
+  // Get unique star ratings from available hotels
+  const availableStars = [...new Set(hotels.map(h => h.stars || h.rating).filter(stars => stars && stars > 0))].sort((a, b) => b - a)
+  
   const filtered = hotels.filter(h => {
     const okPrice = true // client-side price filter could be applied if price is numeric
-    const okStars = filters.stars ? String(h.rating||'').startsWith(String(filters.stars)) : true
-    const okAmenities = filters.amenities ? String(h.raw?.amenities||'').toLowerCase().includes(filters.amenities.toLowerCase()) : true
+    
+    // Better star filtering logic
+    const hotelStars = h.stars || h.rating
+    const okStars = filters.stars ? 
+      (hotelStars && Math.floor(hotelStars) === Math.floor(parseFloat(filters.stars))) : 
+      true
+    
+    const okAmenities = filters.amenities ? 
+      String(h.facilities?.join(' ') || h.raw?.amenities || '').toLowerCase().includes(filters.amenities.toLowerCase()) : 
+      true
+    
     return okPrice && okStars && okAmenities
   })
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="flex flex-wrap gap-3 items-end card-glass p-3 text-white dark:text-white">
+      <div className="flex flex-wrap gap-3 items-end card-glass p-3 text-neutral-800 dark:text-white">
         <div>
           <label className="label">Stars</label>
           <select className="input" value={filters.stars} onChange={e=>setFilters(f=>({...f, stars: e.target.value}))}>
             <option value="">Any</option>
-            <option value="5">5</option>
-            <option value="4">4</option>
-            <option value="3">3</option>
+            {availableStars.map(stars => (
+              <option key={stars} value={stars}>
+                {Math.floor(stars)} {Math.floor(stars) === 1 ? 'Star' : 'Stars'}
+                {stars % 1 !== 0 && '+'}
+              </option>
+            ))}
           </select>
         </div>
         <div>
@@ -83,7 +115,7 @@ export default function HotelList() {
         <button className="btn" onClick={runComparison} disabled={compareIds.length<2}>Compare Selected ({compareIds.length})</button>
       </div>
 
-      <div className="mt-4 p-3 card-glass text-white">
+      <div className="mt-4 p-3 card-glass text-neutral-800 dark:text-white">
         <div className="font-medium mb-2">Smart Filters (Natural language)</div>
         <div className="flex gap-2">
           <input className="input flex-1" placeholder="e.g., budget-friendly 4-star hotels with pool near Connaught Place" value={nl} onChange={e=>setNl(e.target.value)} />
@@ -109,8 +141,8 @@ export default function HotelList() {
         </div>
       </div>
 
-      {loading && <div className="mt-6 animate-pulse text-white/80">Loading hotels…</div>}
-      {error && <div className="mt-6 text-red-300">{error}</div>}
+      {loading && <div className="mt-6 animate-pulse text-neutral-600 dark:text-white/80">Loading hotels…</div>}
+      {error && <div className="mt-6 text-red-600 dark:text-red-300">{error}</div>}
 
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         {filtered.map(h => (

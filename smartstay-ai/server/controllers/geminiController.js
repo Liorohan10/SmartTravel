@@ -1,17 +1,17 @@
 import axios from 'axios';
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 async function callGemini(prompt, system = '') {
   // Google Gemini REST (Generative Language) simple call via axios
-  // Endpoint style: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key=API_KEY
+  // Always use gemini-2.5-flash as requested
   const API_KEY = getGeminiApiKey();
   if (!API_KEY) {
     const err = new Error('Gemini API key not configured. Set GEMINI_API_KEY or GOOGLE_API_KEY in server/.env');
     err.status = 500; throw err;
   }
   
-  const modelsToTry = [GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-1.5-flash'];
+  const model = 'gemini-2.5-flash'; // Always use gemini-2.5-flash
   const payload = {
     contents: [
       ...(system ? [{ role: 'user', parts: [{ text: system }] }] : []),
@@ -20,28 +20,24 @@ async function callGemini(prompt, system = '') {
   };
   const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': API_KEY };
 
-  let lastError;
-  for (const model of modelsToTry) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-      console.log('[Gemini] Calling model:', model);
-      const { data } = await axios.post(url, payload, { headers });
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      if (!text) console.warn('[Gemini] Empty response text from model', model);
-      if (model !== GEMINI_MODEL) console.warn(`[Gemini] Fallback succeeded using ${model}`);
-      return text;
-    } catch (err) {
-      lastError = err;
-      const status = err.response?.status;
-      const message = err.response?.data?.error?.message || err.message;
-      console.warn('[Gemini] Model failed:', { model, status, message });
-      // If NOT_FOUND or method unsupported, try next model
-      if (status === 404 || message?.includes('not supported')) continue;
-      // Other errors (e.g., auth) shouldn't fallback hide the root cause
-      break;
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    console.log('[Gemini] Calling model:', model);
+    const { data } = await axios.post(url, payload, { headers });
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) {
+      console.warn('[Gemini] Empty response text from model', model);
+      throw new Error('Empty response from Gemini API');
     }
+    return text;
+  } catch (err) {
+    const status = err.response?.status;
+    const message = err.response?.data?.error?.message || err.message;
+    console.error('[Gemini] Model failed:', { model, status, message });
+    // Re-throw the error with proper status
+    err.status = status || 500;
+    throw err;
   }
-  throw lastError || new Error('Unknown Gemini error');
 }
 
 function getGeminiApiKey() {
