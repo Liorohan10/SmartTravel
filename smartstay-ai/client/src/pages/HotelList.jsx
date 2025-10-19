@@ -66,7 +66,7 @@ export default function HotelList() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="flex flex-wrap gap-3 items-end">
+      <div className="flex flex-wrap gap-3 items-end card-glass p-3 text-white dark:text-white">
         <div>
           <label className="label">Stars</label>
           <select className="input" value={filters.stars} onChange={e=>setFilters(f=>({...f, stars: e.target.value}))}>
@@ -83,7 +83,7 @@ export default function HotelList() {
         <button className="btn" onClick={runComparison} disabled={compareIds.length<2}>Compare Selected ({compareIds.length})</button>
       </div>
 
-      <div className="mt-4 p-3 rounded border bg-white">
+      <div className="mt-4 p-3 card-glass text-white">
         <div className="font-medium mb-2">Smart Filters (Natural language)</div>
         <div className="flex gap-2">
           <input className="input flex-1" placeholder="e.g., budget-friendly 4-star hotels with pool near Connaught Place" value={nl} onChange={e=>setNl(e.target.value)} />
@@ -109,8 +109,8 @@ export default function HotelList() {
         </div>
       </div>
 
-      {loading && <div className="mt-6 animate-pulse">Loading hotels…</div>}
-      {error && <div className="mt-6 text-red-600">{error}</div>}
+      {loading && <div className="mt-6 animate-pulse text-white/80">Loading hotels…</div>}
+      {error && <div className="mt-6 text-red-300">{error}</div>}
 
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         {filtered.map(h => (

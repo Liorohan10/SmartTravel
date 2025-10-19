@@ -32,25 +32,25 @@ export default function HotelDetails() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6">
-      <div className="md:col-span-2 space-y-4">
+      <div className="md:col-span-2 space-y-4 card-glass p-4 text-white dark:text-white">
         {hotel.images?.[0] && <img src={hotel.images[0]} alt={hotel.name} className="w-full rounded" />}
         <h1 className="text-2xl font-semibold">{hotel.name}</h1>
-        <div className="text-gray-600">{hotel.location || hotel.address?.full}</div>
+        <div className="text-white/70">{hotel.location || hotel.address?.full}</div>
         <div>⭐ {hotel.rating ?? hotel.stars ?? 'N/A'}</div>
-        <div className="prose whitespace-pre-wrap bg-gray-50 p-3 rounded">{summary}</div>
+        <div className="whitespace-pre-wrap card-glass p-3 text-white/90">{summary}</div>
         <div>
           <h3 className="font-semibold mb-1">Nearby</h3>
-          <p className="text-sm text-gray-600">Use AI Mode to ask for nearby attractions and restaurants.</p>
+          <p className="text-sm text-white/70">Use AI Mode to ask for nearby attractions and restaurants.</p>
         </div>
       </div>
       <aside className="space-y-3">
-        <div className="border rounded p-3 bg-white">
+        <div className="card-glass p-3 text-white">
           <div className="font-semibold">Book this hotel</div>
           <button className="btn w-full mt-2" onClick={()=>alert('Booking through /api/liteapi/book (stub).')}>Proceed to Book</button>
         </div>
-        <div className="border rounded p-3 bg-white">
+        <div className="card-glass p-3 text-white">
           <div className="font-semibold mb-2">Amenities</div>
-          <ul className="text-sm list-disc pl-5">
+          <ul className="text-sm list-disc pl-5 text-white/90">
             {(hotel.amenities || []).slice(0,8).map((a,i)=>(<li key={i}>{a}</li>))}
           </ul>
         </div>

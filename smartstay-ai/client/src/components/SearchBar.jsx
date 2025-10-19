@@ -21,17 +21,85 @@ export default function SearchBar() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid lg:grid-cols-6 gap-3">
-      <input className="input" placeholder="Destination" value={form.destination} onChange={e=>update('destination', e.target.value)} required />
-      <input type="date" className="input" value={form.checkIn} onChange={e=>update('checkIn', e.target.value)} required />
-      <input type="date" className="input" value={form.checkOut} onChange={e=>update('checkOut', e.target.value)} required />
-      <input type="number" min="1" className="input" placeholder="Guests" value={form.guests} onChange={e=>update('guests', e.target.value)} />
-      <input className="input" placeholder="Price min-max (e.g. 50-200)" value={`${form.minPrice}${form.maxPrice?'-'+form.maxPrice:''}`}
-        onChange={e=>{
-          const v=e.target.value; const [min,max]=v.split('-'); update('minPrice',min||''); update('maxPrice',max||'')
-        }} />
-      <input className="input" placeholder="Amenities (comma-separated)" value={form.amenities} onChange={e=>update('amenities', e.target.value)} />
-      <button className="btn col-span-2 lg:col-span-1">Search Hotels</button>
+    <form onSubmit={onSubmit} className="grid lg:grid-cols-6 gap-6">
+      <div>
+        <label className="body-small font-medium mb-3 block opacity-90">
+          📍 Destination
+        </label>
+        <input 
+          className="aero-input" 
+          placeholder="City or area" 
+          value={form.destination} 
+          onChange={e=>update('destination', e.target.value)} 
+          required 
+        />
+      </div>
+      <div>
+        <label className="body-small font-medium mb-3 block opacity-90">
+          📅 Check-in
+        </label>
+        <input 
+          type="date" 
+          className="aero-input" 
+          value={form.checkIn} 
+          onChange={e=>update('checkIn', e.target.value)} 
+          required 
+        />
+      </div>
+      <div>
+        <label className="body-small font-medium mb-3 block opacity-90">
+          📅 Check-out
+        </label>
+        <input 
+          type="date" 
+          className="aero-input" 
+          value={form.checkOut} 
+          onChange={e=>update('checkOut', e.target.value)} 
+          required 
+        />
+      </div>
+      <div>
+        <label className="body-small font-medium mb-3 block opacity-90">
+          👥 Guests
+        </label>
+        <input 
+          type="number" 
+          min="1" 
+          className="aero-input" 
+          placeholder="e.g., 2" 
+          value={form.guests} 
+          onChange={e=>update('guests', e.target.value)} 
+        />
+      </div>
+      <div>
+        <label className="body-small font-medium mb-3 block opacity-90">
+          💰 Price range
+        </label>
+        <input 
+          className="aero-input" 
+          placeholder="50-200" 
+          value={`${form.minPrice}${form.maxPrice?'-'+form.maxPrice:''}`}
+          onChange={e=>{
+            const v=e.target.value; const [min,max]=v.split('-'); update('minPrice',min||''); update('maxPrice',max||'')
+          }} 
+        />
+      </div>
+      <div>
+        <label className="body-small font-medium mb-3 block opacity-90">
+          🏊 Amenities
+        </label>
+        <input 
+          className="aero-input" 
+          placeholder="pool, spa" 
+          value={form.amenities} 
+          onChange={e=>update('amenities', e.target.value)} 
+        />
+      </div>
+      <div className="lg:col-span-6 flex justify-center mt-4">
+        <button className="aero-btn-primary px-12">
+          ✨ Search Hotels
+        </button>
+      </div>
     </form>
   )
 }

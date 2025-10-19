@@ -29,22 +29,69 @@ export default function ChatAssistant() {
   }
 
   return (
-    <div className="flex flex-col h-[70vh]">
-      <div className="flex-1 overflow-y-auto space-y-3 p-3 rounded bg-black/40 border border-neon-500">
+    <div className="space-y-6">
+      {/* Chat Messages Area */}
+      <div className="h-[60vh] overflow-y-auto space-y-4 pr-2">
         {messages.map((m, idx) => (
-          <div key={idx} className={`max-w-[80%] rounded px-3 py-2 ${m.role==='assistant'? 'bg-black/60 text-neon-500 self-start' : 'bg-neon-500 text-black ml-auto'}`}>{m.content}</div>
+          <div
+            key={idx}
+            className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-up`}
+            style={{ animationDelay: `${idx * 0.1}s` }}
+          >
+            <div className={m.role === 'assistant' ? 'chat-bubble-ai' : 'chat-bubble-user'}>
+              {m.content}
+            </div>
+          </div>
         ))}
-        {loading && <div className="text-neon-500 animate-pulse">Assistant is typing…</div>}
+        
+        {loading && (
+          <div className="flex justify-start animate-fade-up">
+            <div className="glass-panel px-4 py-3 rounded-2xl max-w-[200px]">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-primary-400 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-primary-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-primary-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+                <span className="body-small opacity-80">AI is thinking...</span>
+              </div>
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
-      <div className="mt-3 grid gap-2">
-        <div className="flex gap-2">
-          <input className="input flex-1" placeholder="Ask SmartStay AI…" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter'){ send(input); setInput('') } }} />
-          <button className="btn" onClick={()=>{ send(input); setInput('') }}>Send</button>
+
+      {/* Input Area */}
+      <div className="glass-panel p-4 space-y-4">
+        <div className="flex gap-3 items-end">
+          <input 
+            className="aero-input flex-1" 
+            placeholder="Ask SmartStay AI anything..." 
+            value={input} 
+            onChange={e=>setInput(e.target.value)} 
+            onKeyDown={e=>{ if(e.key==='Enter' && input.trim()){ send(input.trim()); setInput('') } }} 
+          />
+          <button 
+            className="aero-btn-primary px-6"
+            onClick={()=>{ if(input.trim()) { send(input.trim()); setInput('') } }}
+            disabled={!input.trim()}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
         </div>
+        
+        {/* Quick Suggestion Chips */}
         <div className="flex flex-wrap gap-2">
-          {quickPrompts.map((p,i)=>(
-            <button key={i} className="btn-secondary" onClick={()=>send(p)}>{p}</button>
+          {quickPrompts.map((prompt, i) => (
+            <button 
+              key={i} 
+              className="aero-btn-secondary px-3 py-2 body-small"
+              onClick={() => send(prompt)}
+            >
+              {prompt}
+            </button>
           ))}
         </div>
       </div>

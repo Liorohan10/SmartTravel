@@ -5,9 +5,231 @@
 /* App skeleton */
 html, body, #root { height: 100%; }
 
+/* Aero-Kinetik Color System Tokens */
+:root {
+  /* Light Mode Colors */
+  --color-primary-100: #E0F7FA;
+  --color-primary-400: #4DD0E1;
+  --color-primary-500: #00BCD4;
+  --color-primary-700: #00ACC1;
+  --color-neutral-100: #F8F9FA;
+  --color-neutral-200: #E9ECEF;
+  --color-neutral-500: #ADB5BD;
+  --color-neutral-800: #343A40;
+  --color-neutral-900: #212529;
+  
+  /* Aurora Gradients */
+  --aurora-calm: radial-gradient(50% 50% at 20% 10%, rgba(132,250,176,0.15), transparent 60%),
+                 radial-gradient(40% 40% at 80% 20%, rgba(143,211,244,0.12), transparent 60%),
+                 linear-gradient(135deg, #f6fbff 0%, #eef6ff 100%);
+  
+  --aurora-vivid: radial-gradient(60% 60% at 30% 10%, rgba(161,196,253,0.2), transparent 70%),
+                  radial-gradient(50% 50% at 70% 80%, rgba(194,233,251,0.15), transparent 60%),
+                  linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+}
+
+.dark {
+  /* Dark Mode Colors */
+  --color-primary-100: #B2EBF2;
+  --color-primary-400: #26C6DA;
+  --color-primary-500: #26C6DA;
+  --color-primary-700: #0097A7;
+  --color-neutral-100: #E9ECEF;
+  --color-neutral-200: #CED4DA;
+  --color-neutral-500: #6C757D;
+  --color-neutral-800: #212529;
+  --color-neutral-900: #101214;
+  
+  /* Dark Aurora Gradients */
+  --aurora-calm: radial-gradient(50% 50% at 20% 10%, rgba(0,82,212,0.18), transparent 60%),
+                 radial-gradient(40% 40% at 80% 20%, rgba(67,100,247,0.16), transparent 60%),
+                 radial-gradient(30% 30% at 50% 80%, rgba(111,177,252,0.10), transparent 60%),
+                 linear-gradient(135deg, #0a0a14 0%, #0f1020 100%);
+  
+  --aurora-vivid: radial-gradient(60% 60% at 30% 10%, rgba(127,0,255,0.15), transparent 70%),
+                  radial-gradient(50% 50% at 70% 80%, rgba(225,0,255,0.12), transparent 60%),
+                  linear-gradient(135deg, #0a0a14 0%, #1a0a20 100%);
+}
+
 @layer components {
-	.input { @apply w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-neon-500; }
-	.btn { @apply inline-flex items-center justify-center rounded bg-neon-500 text-black font-medium px-4 py-2 hover:bg-neon-700 transition; }
-	.btn-secondary { @apply inline-flex items-center justify-center rounded border border-gray-300 px-3 py-2 bg-white hover:bg-gray-50; }
-	.label { @apply block text-sm text-gray-600 mb-1; }
+  /* Typography Scale */
+  .heading-1 { @apply text-4xl font-serif font-semibold leading-tight tracking-tight; }
+  .heading-2 { @apply text-3xl font-serif font-semibold leading-tight tracking-tight; }
+  .heading-3 { @apply text-2xl font-serif font-medium leading-snug; }
+  .body-large { @apply text-lg font-sans leading-relaxed; }
+  .body { @apply text-base font-sans leading-relaxed; }
+  .body-small { @apply text-sm font-sans leading-normal; }
+  
+  /* Aero-Kinetik Glass System */
+  .glass-panel {
+    @apply rounded-2xl border shadow-elevation-2;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .dark .glass-panel {
+    background: rgba(20, 20, 30, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Input Controls */
+  .aero-input {
+    @apply w-full rounded-xl px-4 py-3 backdrop-blur-md focus:outline-none transition-all duration-200;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--color-neutral-800);
+  }
+  
+  .aero-input::placeholder {
+    color: var(--color-neutral-500);
+  }
+  
+  .aero-input:focus {
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+  }
+  
+  .dark .aero-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-neutral-100);
+  }
+  
+  .dark .aero-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  /* Primary Button */
+  .aero-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-medium transition-all duration-200;
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-400));
+    color: white;
+    box-shadow: 0 4px 16px rgba(0, 188, 212, 0.3);
+  }
+  
+  .aero-btn-primary:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 188, 212, 0.4);
+    background-size: 200% 100%;
+    animation: shimmer 2s ease-in-out;
+  }
+  
+  /* Secondary Button */
+  .aero-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-medium transition-all duration-200 glass-panel;
+    color: var(--color-neutral-800);
+  }
+  
+  .dark .aero-btn-secondary {
+    color: var(--color-neutral-100);
+  }
+  
+  .aero-btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-color: var(--color-primary-500);
+  }
+  
+  /* Feature Card */
+  .aero-feature-card {
+    @apply glass-panel p-0 transition-all duration-300 cursor-pointer;
+  }
+  
+  .aero-feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    border-color: var(--color-primary-400);
+  }
+  
+  /* Chat Bubble Styles */
+  .chat-bubble-ai {
+    @apply rounded-2xl px-4 py-3 max-w-[80%] shadow-elevation-1;
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-400));
+    color: white;
+  }
+  
+  .chat-bubble-user {
+    @apply rounded-2xl px-4 py-3 max-w-[80%] ml-auto glass-panel;
+    color: var(--color-neutral-800);
+  }
+  
+  .dark .chat-bubble-user {
+    color: var(--color-neutral-100);
+  }
+  
+  /* Utility Classes */
+  .glow-divider { @apply h-px bg-gradient-to-r from-transparent via-primary-400/40 to-transparent; }
+  .text-gradient { 
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-400));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Aurora Background System */
+body {
+  font-family: theme(fontFamily.sans);
+  background: var(--aurora-calm);
+  background-attachment: fixed;
+  color: var(--color-neutral-800);
+  line-height: 1.6;
+}
+
+body.dark {
+  background: var(--aurora-calm);
+  color: var(--color-neutral-100);
+}
+
+/* Animated Aurora Layer */
+.aurora-layer {
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  background: var(--aurora-calm);
+  animation: aurora-drift 60s ease-in-out infinite;
+  filter: saturate(120%) brightness(1.1);
+}
+
+.bg-animated::before {
+	content: '';
+	position: fixed;
+	inset: -20%;
+	z-index: -1;
+	background: radial-gradient(35% 35% at 20% 10%, rgba(0,229,255,.18), transparent 60%),
+					radial-gradient(40% 40% at 80% 20%, rgba(180,0,255,.16), transparent 60%),
+					radial-gradient(30% 30% at 50% 80%, rgba(0,200,255,.10), transparent 60%);
+	filter: saturate(120%);
+	animation: meshMove 50s ease-in-out infinite alternate;
+}
+
+body:not(.dark).bg-animated::before { opacity: 0.65; }
+body.dark.bg-animated::before { opacity: 0.5; }
+
+@keyframes meshMove {
+	0% { transform: translate3d(0,0,0) scale(1); }
+	50% { transform: translate3d(-2%, -1%, 0) scale(1.03); }
+	100% { transform: translate3d(2%, 1%, 0) scale(1.05); }
+}
+
+.shimmer {
+	background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.2) 37%, rgba(255,255,255,0.05) 63%);
+	background-size: 1000px 100%;
+	animation: shimmer 1.8s linear infinite;
+}
+
+/* True glass tokens for a refined look (light and dark) */
+.card-glass {
+	background-color: rgba(255,255,255,0.45);
+	backdrop-filter: blur(24px) saturate(150%);
+	-webkit-backdrop-filter: blur(24px) saturate(150%);
+	border: 1px solid rgba(255,255,255,0.2);
+}
+.card-dark {
+	background-color: rgba(20,20,30,0.40);
+	backdrop-filter: blur(24px) saturate(150%);
+	-webkit-backdrop-filter: blur(24px) saturate(150%);
+	border: 1px solid rgba(255,255,255,0.10);
 }
