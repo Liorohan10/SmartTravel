@@ -1,17 +1,32 @@
 # Dependencies
 node_modules/
+*/node_modules/
+**/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# Workspace symlinks (prevent tracking of workspace references)
+node_modules/smartstay-ai-server
+node_modules/smartstay-ai-client
 
 # Environment variables (NEVER commit these!)
 .env
+.env.*
 .env.local
+.env.development
 .env.development.local
+.env.staging
+.env.staging.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
-client/.env
-server/.env
+client/.env*
+server/.env*
+*/.env*
+**/.env*
 
 # Build outputs
 dist/
@@ -82,3 +97,24 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Additional environment and config files
+config.json
+config.local.json
+secrets.json
+.secrets
+.credentials
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Package manager lock files (optional - uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Local development files
+.local
+local.*
+*.local.*
