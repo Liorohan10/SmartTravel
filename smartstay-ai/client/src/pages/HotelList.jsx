@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api } from '../lib/api'
+import { getHotelRates } from '../services/liteApiService'
 import HotelCard from '../components/HotelCard.jsx'
 import HotelComparison from '../components/HotelComparison.jsx'
 
@@ -15,6 +16,7 @@ export default function HotelList() {
   const [compareIds, setCompareIds] = useState([])
   const [comparison, setComparison] = useState('')
   const [nl, setNl] = useState('')
+  const [ratesLoading, setRatesLoading] = useState(false)
 
   useEffect(() => {
     async function fetchHotels() {
@@ -46,7 +48,7 @@ export default function HotelList() {
         
         console.log('✅ Extracted hotels:', items.length, 'hotels')
         
-        setHotels(items.map((h, i) => {
+        const mappedHotels = items.map((h, i) => {
           // LiteAPI hotel fields
           const hotelId = h.id || h.hotelId || h.hotel_id || String(i)
           console.log(`Hotel ${i}: ID = ${hotelId}, Name = ${h.name}`)
@@ -64,7 +66,18 @@ export default function HotelList() {
             description: h.hotelDescription || h.description || '',
             raw: h,
           }
-        }))
+        })
+        
+        setHotels(mappedHotels)
+        
+        // Fetch rates if check-in and check-out dates are provided
+        const checkIn = params.checkIn || params.checkin
+        const checkout = params.checkOut || params.checkout
+        
+        if (checkIn && checkout && mappedHotels.length > 0) {
+          fetchRates(mappedHotels, checkIn, checkout)
+        }
+        
       } catch (e) {
         console.error('❌ Hotel search failed:', e)
         setError(`Failed to load hotels: ${e.response?.data?.error || e.message}`)
@@ -72,6 +85,70 @@ export default function HotelList() {
     }
     fetchHotels()
   }, [q])
+
+  async function fetchRates(hotels, checkIn, checkout) {
+    setRatesLoading(true)
+    try {
+      console.log('💰 Fetching rates for hotels...')
+      
+      // Fetch rates in batches (max 50 hotels at a time for performance)
+      const batchSize = 50
+      const batches = []
+      
+      for (let i = 0; i < hotels.length; i += batchSize) {
+        batches.push(hotels.slice(i, i + batchSize))
+      }
+      
+      for (const batch of batches) {
+        const hotelIds = batch.map(h => h.id)
+        
+        try {
+          const ratesData = await getHotelRates(hotelIds, checkIn, checkout, {
+            currency: 'INR',
+            guestNationality: 'IN',
+            occupancies: [{ adults: 2, children: [] }],
+            maxRatesPerHotel: 1
+          })
+          
+          console.log('✅ Rates fetched:', ratesData)
+          
+          // Update hotels with rate information
+          if (ratesData?.data) {
+            setHotels(prevHotels => {
+              return prevHotels.map(hotel => {
+                const hotelRate = ratesData.data.find(r => r.hotelId === hotel.id)
+                if (hotelRate && hotelRate.roomTypes && hotelRate.roomTypes.length > 0) {
+                  const cheapestRoom = hotelRate.roomTypes[0]
+                  const rate = cheapestRoom.rates && cheapestRoom.rates[0]
+                  
+                  return {
+                    ...hotel,
+                    price: rate?.retailRate?.total?.[0]?.amount || cheapestRoom.offerRetailRate?.amount || hotel.price,
+                    currency: rate?.retailRate?.total?.[0]?.currency || cheapestRoom.offerRetailRate?.currency || 'INR',
+                    rateInfo: {
+                      roomName: rate?.name || cheapestRoom.roomTypeId,
+                      boardType: rate?.boardName || rate?.boardType,
+                      cancellationPolicy: rate?.cancellationPolicies?.refundableTag,
+                      available: true
+                    }
+                  }
+                }
+                return hotel
+              })
+            })
+          }
+        } catch (rateError) {
+          console.error('❌ Failed to fetch rates for batch:', rateError)
+          // Continue with other batches even if one fails
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Rates fetch failed:', error)
+    } finally {
+      setRatesLoading(false)
+    }
+  }
 
   function toggleCompare(hotel, checked) {
     setCompareIds(prev => {
@@ -160,6 +237,14 @@ export default function HotelList() {
 
       {loading && <div className="mt-6 animate-pulse text-neutral-600 dark:text-white/80">Loading hotels…</div>}
       {error && <div className="mt-6 text-red-600 dark:text-red-300">{error}</div>}
+      {ratesLoading && !loading && (
+        <div className="mt-4 p-4 card-glass bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin w-5 h-5 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full"></div>
+            <span>💰 Fetching live rates in INR...</span>
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         {filtered.map(h => (

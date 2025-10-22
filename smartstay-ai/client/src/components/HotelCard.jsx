@@ -1,9 +1,27 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import BookingFlow from './BookingFlow'
 
 export default function HotelCard({ hotel, selectable=false, selected=false, onSelect }) {
   const [showBookingFlow, setShowBookingFlow] = useState(false)
+  const location = useLocation()
+  
+  // Extract search params to pass to hotel details
+  const searchParams = new URLSearchParams(location.search)
+  const checkIn = searchParams.get('checkIn') || searchParams.get('checkin')
+  const checkout = searchParams.get('checkOut') || searchParams.get('checkout')
+  
+  // Build details URL with dates if available
+  const getDetailsUrl = () => {
+    let url = `/hotels/${hotel.id}`
+    const params = new URLSearchParams()
+    
+    if (checkIn) params.set('checkIn', checkIn)
+    if (checkout) params.set('checkout', checkout)
+    
+    const queryString = params.toString()
+    return queryString ? `${url}?${queryString}` : url
+  }
 
   const renderFacilities = () => {
     if (!hotel.facilities?.length) return null
@@ -103,7 +121,7 @@ export default function HotelCard({ hotel, selectable=false, selected=false, onS
           <div className="flex gap-2 pt-2">
             <Link 
               className="aero-btn-secondary flex-1 text-center" 
-              to={`/hotels/${hotel.id}`}
+              to={getDetailsUrl()}
             >
               📋 Details
             </Link>

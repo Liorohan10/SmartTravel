@@ -107,10 +107,11 @@ export default function HotelDetails() {
         hotelIds: [id],
         checkin: checkIn,
         checkout: checkout,
-        occupancies: [{ adults: 2 }],
-        currency: 'USD',
-        guestNationality: 'US',
-        roomMapping: true // Enable room mapping for detailed room info
+        occupancies: [{ adults: 2, children: [] }],
+        currency: 'INR',
+        guestNationality: 'IN',
+        roomMapping: true, // Enable room mapping for detailed room info
+        maxRatesPerHotel: 10 // Get up to 10 room options
       })
       
       console.log('✅ Rates loaded:', rateData)
@@ -786,6 +787,159 @@ export default function HotelDetails() {
     )
   }
 
+  const renderRates = () => {
+    const checkIn = searchParams.get('checkIn')
+    const checkout = searchParams.get('checkout')
+    
+    if (!checkIn || !checkout) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+            📅 Select dates to view available rates
+          </p>
+          <p className="text-sm text-neutral-500 dark:text-neutral-500">
+            Rates will be displayed in INR (Indian Rupees)
+          </p>
+        </div>
+      )
+    }
+    
+    if (ratesLoading) {
+      return (
+        <div className="text-center py-8">
+          <div className="animate-spin w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-neutral-600 dark:text-neutral-400">Loading rates in INR...</p>
+        </div>
+      )
+    }
+    
+    if (!rates || !rates.data || rates.data.length === 0) {
+      return (
+        <div className="text-center py-8 text-neutral-600 dark:text-neutral-400">
+          <p>No rates available for the selected dates.</p>
+        </div>
+      )
+    }
+    
+    const hotelRates = rates.data[0]
+    if (!hotelRates || !hotelRates.roomTypes || hotelRates.roomTypes.length === 0) {
+      return (
+        <div className="text-center py-8 text-neutral-600 dark:text-neutral-400">
+          <p>No room rates available for these dates.</p>
+        </div>
+      )
+    }
+    
+    return (
+      <div className="space-y-4">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
+            <span>✅</span>
+            <span className="font-medium">Live Rates Available</span>
+          </div>
+          <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+            {checkIn} to {checkout} • Prices in INR
+          </p>
+        </div>
+        
+        {hotelRates.roomTypes.map((roomType, index) => {
+          const rate = roomType.rates && roomType.rates[0]
+          if (!rate) return null
+          
+          const totalPrice = rate.retailRate?.total?.[0]?.amount || roomType.offerRetailRate?.amount
+          const currency = rate.retailRate?.total?.[0]?.currency || roomType.offerRetailRate?.currency || 'INR'
+          const cancellationTag = rate.cancellationPolicies?.refundableTag
+          
+          return (
+            <div 
+              key={roomType.roomTypeId || index}
+              className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-white/10 rounded-lg p-5 hover:shadow-lg transition-shadow"
+            >
+              {/* Room Header */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-lg text-neutral-800 dark:text-white mb-1">
+                    {rate.name}
+                  </h4>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {rate.boardName && (
+                      <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded">
+                        🍽️ {rate.boardName}
+                      </span>
+                    )}
+                    {cancellationTag && (
+                      <span className={`px-2 py-1 rounded ${
+                        cancellationTag === 'RFN' 
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+                          : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+                      }`}>
+                        {cancellationTag === 'RFN' ? '✅ Refundable' : '❌ Non-refundable'}
+                      </span>
+                    )}
+                    {rate.maxOccupancy && (
+                      <span className="px-2 py-1 bg-neutral-100 dark:bg-white/10 text-neutral-700 dark:text-neutral-300 rounded">
+                        👥 Up to {rate.maxOccupancy} guests
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="text-right ml-4">
+                  <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                    ₹{totalPrice?.toLocaleString('en-IN')}
+                  </div>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                    Total for stay
+                  </p>
+                </div>
+              </div>
+
+              {/* Cancellation Policy */}
+              {rate.cancellationPolicies?.cancelPolicyInfos && rate.cancellationPolicies.cancelPolicyInfos.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-white/10">
+                  <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    📋 Cancellation Policy:
+                  </p>
+                  {rate.cancellationPolicies.cancelPolicyInfos.map((policy, idx) => (
+                    <p key={idx} className="text-xs text-neutral-600 dark:text-neutral-400">
+                      Free cancellation until {new Date(policy.cancelTime).toLocaleString('en-IN', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short'
+                      })}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {/* Taxes and Fees */}
+              {rate.retailRate?.taxesAndFees && rate.retailRate.taxesAndFees.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-white/10">
+                  <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    💰 Taxes & Fees:
+                  </p>
+                  {rate.retailRate.taxesAndFees.map((fee, idx) => (
+                    <div key={idx} className="flex justify-between text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                      <span>{fee.description} {fee.included ? '(Included)' : '(Extra)'}</span>
+                      <span>₹{fee.amount?.toLocaleString('en-IN')}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Book Button */}
+              <button 
+                onClick={() => setShowBookingFlow(true)}
+                className="mt-4 w-full bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white py-3 rounded-lg font-medium transition-colors"
+              >
+                Select Room
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -919,6 +1073,15 @@ export default function HotelDetails() {
               {renderFacilities()}
             </div>
 
+            {/* Rates & Pricing Section */}
+            <div className="card-glass p-6 border-2 border-primary-500/30">
+              <h3 className="heading-3 mb-4 text-neutral-800 dark:text-white flex items-center gap-2">
+                💰 Room Rates & Availability
+                <span className="text-sm font-normal text-neutral-600 dark:text-neutral-400">(in INR)</span>
+              </h3>
+              {renderRates()}
+            </div>
+
             {/* Rooms Section */}
             {hotelDetails.rooms && hotelDetails.rooms.length > 0 && (
               <div className="card-glass p-6">
@@ -942,6 +1105,37 @@ export default function HotelDetails() {
             {/* Booking Card */}
             <div className="card-glass p-6 border border-primary-500/30">
               <h3 className="heading-3 mb-4 text-neutral-800 dark:text-white">🎯 Reserve This Hotel</h3>
+              
+              {/* Show cheapest rate if available */}
+              {rates && rates.data && rates.data[0]?.roomTypes && rates.data[0].roomTypes.length > 0 && (() => {
+                const cheapestRoom = rates.data[0].roomTypes[0]
+                const rate = cheapestRoom.rates && cheapestRoom.rates[0]
+                const totalPrice = rate?.retailRate?.total?.[0]?.amount || cheapestRoom.offerRetailRate?.amount
+                const currency = rate?.retailRate?.total?.[0]?.currency || cheapestRoom.offerRetailRate?.currency || 'INR'
+                
+                if (totalPrice) {
+                  return (
+                    <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-lg p-4 mb-4">
+                      <p className="text-xs text-primary-700 dark:text-primary-300 mb-1">Starting from</p>
+                      <div className="text-3xl font-bold text-primary-600 dark:text-primary-400">
+                        ₹{totalPrice.toLocaleString('en-IN')}
+                      </div>
+                      <p className="text-xs text-primary-600 dark:text-primary-300 mt-1">
+                        {rate?.name || 'Room'} • {rate?.boardName || 'See details'}
+                      </p>
+                    </div>
+                  )
+                }
+                return null
+              })()}
+              
+              {ratesLoading && (
+                <div className="bg-neutral-50 dark:bg-white/5 rounded-lg p-4 mb-4 text-center">
+                  <div className="animate-spin w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400">Loading rates...</p>
+                </div>
+              )}
+              
               <div className="space-y-4">
                 <button 
                   className="aero-btn-primary w-full py-3"

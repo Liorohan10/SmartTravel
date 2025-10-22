@@ -329,9 +329,10 @@ export async function getFacilities() {
  * @param {string} params.checkin - Check-in date (YYYY-MM-DD)
  * @param {string} params.checkout - Check-out date (YYYY-MM-DD)
  * @param {Array<Object>} params.occupancies - Guest occupancy details
- * @param {string} params.currency - Currency code (default: USD)
+ * @param {string} params.currency - Currency code (default: INR)
  * @param {string} params.guestNationality - Guest nationality (ISO-2)
  * @param {boolean} params.roomMapping - Enable room mapping for details
+ * @param {number} params.maxRatesPerHotel - Max rates to return per hotel (default: 1)
  */
 export async function searchRates(params) {
   console.log('💰 Searching rates:', params)
@@ -348,10 +349,12 @@ export async function searchRates(params) {
       hotelIds: params.hotelIds,
       checkin: params.checkin,
       checkout: params.checkout,
-      occupancies: params.occupancies || [{ adults: 2 }],
-      currency: params.currency || 'USD',
-      guestNationality: params.guestNationality || 'US',
-      roomMapping: params.roomMapping !== undefined ? params.roomMapping : true
+      occupancies: params.occupancies || [{ adults: 2, children: [] }],
+      currency: params.currency || 'INR',
+      guestNationality: params.guestNationality || 'IN',
+      roomMapping: params.roomMapping !== undefined ? params.roomMapping : true,
+      maxRatesPerHotel: params.maxRatesPerHotel || 1,
+      timeout: 6
     })
   })
   
@@ -362,9 +365,30 @@ export async function searchRates(params) {
   }
   
   const data = await response.json()
-  console.log('✅ Rates loaded')
+  console.log('✅ Rates loaded:', data?.data?.length || 0, 'hotels with rates')
   
   return data
+}
+
+/**
+ * Get rates for multiple hotels (batch search)
+ * @param {Array<string>} hotelIds - Array of hotel IDs
+ * @param {string} checkin - Check-in date (YYYY-MM-DD)
+ * @param {string} checkout - Check-out date (YYYY-MM-DD)
+ * @param {Object} options - Additional options
+ */
+export async function getHotelRates(hotelIds, checkin, checkout, options = {}) {
+  return searchRates({
+    hotelIds,
+    checkin,
+    checkout,
+    currency: options.currency || 'INR',
+    guestNationality: options.guestNationality || 'IN',
+    occupancies: options.occupancies || [{ adults: 2, children: [] }],
+    roomMapping: true,
+    maxRatesPerHotel: options.maxRatesPerHotel || 1,
+    ...options
+  })
 }
 
 /**
@@ -496,6 +520,7 @@ export default {
   
   // Booking endpoints
   searchRates,
+  getHotelRates,
   preBook,
   bookRoom,
   getBookings,
