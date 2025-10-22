@@ -22,6 +22,8 @@ export default function HotelList() {
       try {
         const params = Object.fromEntries(q.entries())
         
+        console.log('🔍 HotelList - Searching with params:', params)
+        
         // Choose appropriate endpoint based on search type
         let endpoint = '/liteapi/hotels/search'
         if (params.aiSearch) {
@@ -33,23 +35,38 @@ export default function HotelList() {
         }
         
         const { data } = await api.get(endpoint, { params })
-        const items = Array.isArray(data?.hotels) ? data.hotels : (Array.isArray(data) ? data : [])
         
-        setHotels(items.map((h, i) => ({
-          id: h.id || h.hotelId || String(i),
-          name: h.name || h.title || 'Hotel',
-          location: h.location || h.address?.full || h.address?.city || h.city || '',
-          rating: h.rating || h.stars || h.score,
-          price: h.price?.amount || h.price || h.rate,
-          image: h.image || h.main_photo || h.images?.[0] || undefined,
-          stars: h.stars,
-          facilities: h.facilities || [],
-          currency: h.currency || 'INR',
-          description: h.description,
-          raw: h,
-        })))
+        console.log('📦 Raw API response:', data)
+        
+        // Handle different response formats from LiteAPI
+        // LiteAPI returns: { data: [...] } or { hotels: [...] }
+        const items = Array.isArray(data?.data) ? data.data :
+                     Array.isArray(data?.hotels) ? data.hotels : 
+                     Array.isArray(data) ? data : []
+        
+        console.log('✅ Extracted hotels:', items.length, 'hotels')
+        
+        setHotels(items.map((h, i) => {
+          // LiteAPI hotel fields
+          const hotelId = h.id || h.hotelId || h.hotel_id || String(i)
+          console.log(`Hotel ${i}: ID = ${hotelId}, Name = ${h.name}`)
+          
+          return {
+            id: hotelId,
+            name: h.name || h.hotel_name || h.title || 'Hotel',
+            location: h.city || h.location || h.address?.city || h.address?.full || '',
+            rating: h.rating || h.stars || h.score || 0,
+            price: h.price?.amount || h.price || h.rate || 0,
+            image: h.main_photo || h.image || h.images?.[0] || undefined,
+            stars: h.starRating || h.stars || 0,
+            facilities: h.hotelFacilities || h.facilities || [],
+            currency: h.currency || 'INR',
+            description: h.hotelDescription || h.description || '',
+            raw: h,
+          }
+        }))
       } catch (e) {
-        console.error('Hotel search failed:', e)
+        console.error('❌ Hotel search failed:', e)
         setError(`Failed to load hotels: ${e.response?.data?.error || e.message}`)
       } finally { setLoading(false) }
     }
