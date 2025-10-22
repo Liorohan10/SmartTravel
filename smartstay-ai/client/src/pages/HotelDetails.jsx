@@ -19,6 +19,9 @@ export default function HotelDetails() {
   const [showAllImages, setShowAllImages] = useState(false)
   const [rates, setRates] = useState(null)
   const [ratesLoading, setRatesLoading] = useState(false)
+  const [selectedRoomPhotos, setSelectedRoomPhotos] = useState(null)
+  const [activeRoomPhotoIndex, setActiveRoomPhotoIndex] = useState(0)
+  const [selectedRoomAmenities, setSelectedRoomAmenities] = useState(null)
 
   useEffect(() => {
     async function fetchHotelData() {
@@ -215,6 +218,246 @@ export default function HotelDetails() {
     )
   }
 
+  const renderAllImagesModal = () => {
+    if (!showAllImages) return null
+    
+    const images = hotelDetails.hotelImages || []
+    
+    return (
+      <div 
+        className="fixed inset-0 bg-black/90 z-50 flex flex-col"
+        onClick={() => setShowAllImages(false)}
+      >
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-4 bg-black/50 backdrop-blur-sm">
+          <div className="text-white">
+            <h3 className="text-xl font-semibold">{hotelDetails.name}</h3>
+            <p className="text-sm text-white/70">{images.length} photos</p>
+          </div>
+          <button 
+            onClick={() => setShowAllImages(false)}
+            className="text-white hover:bg-white/10 p-2 rounded-full transition-colors text-2xl w-10 h-10 flex items-center justify-center"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Main Image Viewer */}
+        <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+          <img 
+            src={images[activeImageIndex]?.urlHd || images[activeImageIndex]?.url}
+            alt={`${hotelDetails.name} - Image ${activeImageIndex + 1}`}
+            className="max-h-[calc(100vh-250px)] max-w-[calc(100vw-100px)] w-auto h-auto object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          
+          {/* Navigation Arrows */}
+          {images.length > 1 && (
+            <>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveImageIndex(prev => prev > 0 ? prev - 1 : images.length - 1)
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors text-2xl"
+              >
+                ←
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveImageIndex(prev => prev < images.length - 1 ? prev + 1 : 0)
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors text-2xl"
+              >
+                →
+              </button>
+            </>
+          )}
+
+          {/* Image Counter */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm">
+            {activeImageIndex + 1} / {images.length}
+          </div>
+        </div>
+
+        {/* Thumbnail Strip */}
+        <div className="bg-black/50 backdrop-blur-sm p-4 overflow-x-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="flex gap-2 justify-center min-w-max mx-auto">
+            {images.map((image, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveImageIndex(index)
+                }}
+                className={`flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                  activeImageIndex === index 
+                    ? 'border-primary-500 scale-105' 
+                    : 'border-white/20 hover:border-white/50 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <img 
+                  src={image.url} 
+                  alt={`Thumbnail ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const renderRoomPhotosModal = () => {
+    if (!selectedRoomPhotos) return null
+    
+    return (
+      <div 
+        className="fixed inset-0 bg-black/90 z-50 flex flex-col"
+        onClick={() => setSelectedRoomPhotos(null)}
+      >
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-4 bg-black/50 backdrop-blur-sm">
+          <div className="text-white">
+            <h3 className="text-xl font-semibold">Room Photos</h3>
+            <p className="text-sm text-white/70">{selectedRoomPhotos.length} photos</p>
+          </div>
+          <button 
+            onClick={() => setSelectedRoomPhotos(null)}
+            className="text-white hover:bg-white/10 p-2 rounded-full transition-colors text-2xl w-10 h-10 flex items-center justify-center"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Main Image Viewer */}
+        <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+          <img 
+            src={selectedRoomPhotos[activeRoomPhotoIndex]?.url || selectedRoomPhotos[activeRoomPhotoIndex]?.failoverPhoto}
+            alt={selectedRoomPhotos[activeRoomPhotoIndex]?.imageDescription || `Room photo ${activeRoomPhotoIndex + 1}`}
+            className="max-h-[calc(100vh-250px)] max-w-[calc(100vw-100px)] w-auto h-auto object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          
+          {/* Navigation Arrows */}
+          {selectedRoomPhotos.length > 1 && (
+            <>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveRoomPhotoIndex(prev => prev > 0 ? prev - 1 : selectedRoomPhotos.length - 1)
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors text-2xl"
+              >
+                ←
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveRoomPhotoIndex(prev => prev < selectedRoomPhotos.length - 1 ? prev + 1 : 0)
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors text-2xl"
+              >
+                →
+              </button>
+            </>
+          )}
+
+          {/* Image Counter */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm">
+            {activeRoomPhotoIndex + 1} / {selectedRoomPhotos.length}
+          </div>
+        </div>
+
+        {/* Thumbnail Strip */}
+        <div className="bg-black/50 backdrop-blur-sm p-4 overflow-x-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="flex gap-2 justify-center min-w-max mx-auto">
+            {selectedRoomPhotos.map((photo, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveRoomPhotoIndex(index)
+                }}
+                className={`flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                  activeRoomPhotoIndex === index 
+                    ? 'border-primary-500 scale-105' 
+                    : 'border-white/20 hover:border-white/50 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <img 
+                  src={photo.url || photo.failoverPhoto} 
+                  alt={`Thumbnail ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const renderRoomAmenitiesModal = () => {
+    if (!selectedRoomAmenities) return null
+    
+    return (
+      <div 
+        className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+        onClick={() => setSelectedRoomAmenities(null)}
+      >
+        <div 
+          className="bg-white dark:bg-neutral-900 rounded-xl max-w-3xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Modal Header */}
+          <div className="sticky top-0 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-white/10 p-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-neutral-800 dark:text-white mb-1">
+                Room Amenities
+              </h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                {selectedRoomAmenities.roomName}
+              </p>
+            </div>
+            <button 
+              onClick={() => setSelectedRoomAmenities(null)}
+              className="text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/10 p-2 rounded-full transition-colors text-2xl w-10 h-10 flex items-center justify-center"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Amenities List */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {selectedRoomAmenities.amenities.map((amenity, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-white/5 rounded-lg border border-neutral-200 dark:border-white/10"
+                >
+                  <span className="text-primary-600 dark:text-primary-400 font-bold">✓</span>
+                  <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                    {amenity.name || amenity}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="sticky bottom-0 bg-neutral-50 dark:bg-neutral-800 border-t border-neutral-200 dark:border-white/10 p-4 text-center">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              Total: {selectedRoomAmenities.amenities.length} amenities
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderFacilities = () => {
     // Use hotelFacilities (array of strings) or facilities (array of objects)
     const facilityList = hotelDetails.hotelFacilities || 
@@ -278,15 +521,25 @@ export default function HotelDetails() {
                     key={photoIndex}
                     src={photo.url || photo.failoverPhoto}
                     alt={photo.imageDescription || room.roomName}
-                    className="w-32 h-24 object-cover rounded-lg flex-shrink-0"
+                    className="w-32 h-24 object-cover rounded-lg flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => {
+                      setSelectedRoomPhotos(room.photos)
+                      setActiveRoomPhotoIndex(photoIndex)
+                    }}
                   />
                 ))}
                 {room.photos.length > 4 && (
-                  <div className="w-32 h-24 bg-neutral-200 dark:bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <button 
+                    onClick={() => {
+                      setSelectedRoomPhotos(room.photos)
+                      setActiveRoomPhotoIndex(4)
+                    }}
+                    className="w-32 h-24 bg-neutral-200 dark:bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 hover:bg-neutral-300 dark:hover:bg-white/20 transition-colors cursor-pointer"
+                  >
                     <span className="text-sm text-neutral-600 dark:text-neutral-400">
                       +{room.photos.length - 4} more
                     </span>
-                  </div>
+                  </button>
                 )}
               </div>
             )}
@@ -339,9 +592,12 @@ export default function HotelDetails() {
                     </div>
                   ))}
                   {room.roomAmenities.length > 9 && (
-                    <div className="text-xs text-neutral-500 dark:text-neutral-500">
+                    <button 
+                      onClick={() => setSelectedRoomAmenities({ roomName: room.roomName, amenities: room.roomAmenities })}
+                      className="text-xs text-primary-600 dark:text-primary-400 hover:underline cursor-pointer text-left"
+                    >
                       +{room.roomAmenities.length - 9} more
-                    </div>
+                    </button>
                   )}
                 </div>
               </div>
@@ -817,6 +1073,15 @@ export default function HotelDetails() {
         isOpen={showBookingFlow}
         onClose={() => setShowBookingFlow(false)}
       />
+
+      {/* All Images Modal */}
+      {renderAllImagesModal()}
+
+      {/* Room Photos Modal */}
+      {renderRoomPhotosModal()}
+
+      {/* Room Amenities Modal */}
+      {renderRoomAmenitiesModal()}
     </>
   )
 }
